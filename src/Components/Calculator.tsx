@@ -1,5 +1,3 @@
-import React from "react";
-
 import CalculatorIcon from "../assets/icon-calculator.svg";
 
 const Form = () => {

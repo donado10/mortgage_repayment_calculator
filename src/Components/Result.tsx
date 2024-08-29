@@ -1,4 +1,3 @@
-import React from "react";
 import Illustation from "../assets/illustration-empty.svg";
 
 const Result = () => {
