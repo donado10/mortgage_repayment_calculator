@@ -1,12 +1,6 @@
-import React, {
-  FormEvent,
-  ReactNode,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { FormEvent, ReactNode, useEffect, useRef } from "react";
 import CalculatorIcon from "../assets/icon-calculator.svg";
-import { calculateMonthlyMortgage } from "../Utils/Functions";
+import { useAppContext } from "../App";
 
 const InputFormLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
   return (
@@ -50,12 +44,19 @@ const InputCheckboxLabel: React.FC<{ label: string }> = ({ label }) => {
   );
 };
 
-const Form: React.FC<{ onSubmit: React.Dispatch<number | null> }> = ({
-  onSubmit,
-}) => {
+const Form = () => {
   const mortgageAmountRef = useRef<HTMLInputElement>();
   const mortgageTermRef = useRef<HTMLInputElement>();
   const interestRateRef = useRef<HTMLInputElement>();
+  const mortgageCtx = useAppContext();
+
+  useEffect(() => {
+    if (!mortgageCtx?.mortgageData) {
+      mortgageAmountRef.current!.value = "";
+      mortgageTermRef.current!.value = "";
+      interestRateRef.current!.value = "";
+    }
+  }, [mortgageCtx?.mortgageData]);
 
   const submitHandler = (event: FormEvent) => {
     event.preventDefault();
@@ -65,12 +66,11 @@ const Form: React.FC<{ onSubmit: React.Dispatch<number | null> }> = ({
     const interestRate = interestRateRef.current?.value;
 
     if (mortgageAmount && mortgageTerm && interestRate) {
-      const result = calculateMonthlyMortgage(
+      mortgageCtx?.addMortgageParams(
         +mortgageAmount,
-        +interestRate,
         +mortgageTerm,
+        +interestRate,
       );
-      onSubmit(result);
     }
   };
 
@@ -84,6 +84,7 @@ const Form: React.FC<{ onSubmit: React.Dispatch<number | null> }> = ({
         <InputLabel label="Mortgage Amount" />
         <InputFormLayout>
           <InputFormPrefix content={"£"} />
+
           <input
             type="number"
             className="flex-grow outline-none"
@@ -100,6 +101,7 @@ const Form: React.FC<{ onSubmit: React.Dispatch<number | null> }> = ({
               className="flex-grow p-1 outline-none md:w-[80%] md:flex-grow-0"
               ref={mortgageTermRef as React.LegacyRef<HTMLInputElement>}
             />
+
             <InputFormPrefix content={"years"} />
           </InputFormLayout>
         </div>
@@ -143,16 +145,8 @@ const Form: React.FC<{ onSubmit: React.Dispatch<number | null> }> = ({
   );
 };
 
-const Calculator: React.FC<{ setRepayment: React.Dispatch<number | null> }> = ({
-  setRepayment,
-}) => {
-  const [mortgageCalculResult, setMortgageCalculResult] = useState<
-    number | null
-  >(null);
-
-  useEffect(() => {
-    setRepayment(mortgageCalculResult);
-  }, [mortgageCalculResult]);
+const Calculator = () => {
+  const mortgageCtx = useAppContext();
 
   return (
     <div className="h-fit w-full bg-white p-8 sm:rounded-t-2xl md:w-1/2 md:rounded-l-2xl md:rounded-t-none">
@@ -161,11 +155,17 @@ const Calculator: React.FC<{ setRepayment: React.Dispatch<number | null> }> = ({
           <h1 className="text-2xl font-semibold text-slate-900">
             Mortgage Calculator
           </h1>
-          <button className="my-2 self-start text-slate-700 underline">
+          <button
+            className="my-2 self-start text-slate-700 underline"
+            onClick={() => {
+              console.log("heyyyyyy");
+              mortgageCtx?.resetMortgageParams();
+            }}
+          >
             <span>Clear all</span>
           </button>
         </div>
-        <Form onSubmit={setMortgageCalculResult} />
+        <Form />
       </div>
     </div>
   );

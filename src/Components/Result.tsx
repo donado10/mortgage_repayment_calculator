@@ -1,5 +1,8 @@
 import React from "react";
 import Illustation from "../assets/illustration-empty.svg";
+import { calculateMonthlyMortgage } from "../Utils/Functions";
+import { useAppContext } from "../App";
+import { IMortgage } from "../App";
 
 const BeforeCalcul = () => {
   return (
@@ -16,7 +19,17 @@ const BeforeCalcul = () => {
   );
 };
 
-const AfterCalcul: React.FC<{ value: number }> = ({ value }) => {
+const AfterCalcul: React.FC<{
+  mortgage: IMortgage;
+}> = ({ mortgage }) => {
+  const value = calculateMonthlyMortgage(
+    mortgage!.mortgageAmount,
+    mortgage!.interestRate,
+    mortgage!.mortgageTerm,
+  );
+
+  const totalTerm = value * (mortgage!.mortgageTerm * 12);
+
   return (
     <>
       <h1 className="self-start text-2xl font-bold">Your results</h1>
@@ -39,7 +52,7 @@ const AfterCalcul: React.FC<{ value: number }> = ({ value }) => {
             Total you'll repay over the terms
           </span>
           <h2 className="text-xl font-bold text-white">
-            £{(value * 300).toFixed(2)}
+            £{totalTerm.toFixed(2)}
           </h2>
         </div>
       </div>
@@ -47,11 +60,19 @@ const AfterCalcul: React.FC<{ value: number }> = ({ value }) => {
   );
 };
 
-const Result: React.FC<{ value: number | null }> = ({ value }) => {
+const Result = () => {
+  const mortgageCtx = useAppContext();
+
+  const mortgageValues = mortgageCtx?.mortgageData
+    ? Object.values(mortgageCtx?.mortgageData)
+    : null;
+
   return (
     <div className="flex w-full flex-col items-center justify-center gap-5 bg-slate-900 p-12 text-white sm:rounded-b-2xl md:w-1/2 md:rounded-b-none md:rounded-r-2xl md:rounded-bl-[100px]">
-      {!value && <BeforeCalcul />}
-      {value && <AfterCalcul value={value} />}
+      {(!mortgageValues || mortgageValues?.length < 2) && <BeforeCalcul />}
+      {mortgageValues && mortgageValues.length > 2 && (
+        <AfterCalcul mortgage={mortgageCtx?.mortgageData!} />
+      )}
     </div>
   );
 };

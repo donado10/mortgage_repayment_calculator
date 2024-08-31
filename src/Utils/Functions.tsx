@@ -25,3 +25,25 @@ export function calculateMonthlyMortgage(
 
   return Math.round(monthlyPayment * 100) / 100;
 }
+
+export function calculateInterestOnlyPayment(
+  principal: number,
+  annualInterestRate: number,
+): number {
+  // Validate input
+  if (principal <= 0) {
+    throw new Error("Principal amount must be greater than zero.");
+  }
+  if (annualInterestRate <= 0) {
+    throw new Error("Annual interest rate must be greater than zero.");
+  }
+
+  // Convert annual interest rate percentage to a decimal and calculate monthly interest
+  const monthlyInterestRate = annualInterestRate / 100 / 12;
+
+  // Calculate the interest-only payment
+  const interestOnlyPayment = principal * monthlyInterestRate;
+
+  // Round to two decimal places
+  return Math.round(interestOnlyPayment * 100) / 100;
+}
