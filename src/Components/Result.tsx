@@ -1,6 +1,9 @@
 import React from "react";
 import Illustation from "../assets/illustration-empty.svg";
-import { calculateMonthlyMortgage } from "../Utils/Functions";
+import {
+  calculateInterestOnlyPayment,
+  calculateMonthlyMortgage,
+} from "../Utils/Functions";
 import { useAppContext } from "../App";
 import { IMortgage } from "../App";
 
@@ -22,11 +25,23 @@ const BeforeCalcul = () => {
 const AfterCalcul: React.FC<{
   mortgage: IMortgage;
 }> = ({ mortgage }) => {
-  const value = calculateMonthlyMortgage(
-    mortgage!.mortgageAmount,
-    mortgage!.interestRate,
-    mortgage!.mortgageTerm,
-  );
+  let value = 0;
+  if (mortgage.repaymentCheckbox) {
+    console.log(mortgage.repaymentCheckbox);
+    console.log(mortgage.interestCheckbox);
+
+    value = calculateMonthlyMortgage(
+      mortgage!.mortgageAmount,
+      mortgage!.interestRate,
+      mortgage!.mortgageTerm,
+    );
+  }
+  if (mortgage.interestCheckbox) {
+    value = calculateInterestOnlyPayment(
+      mortgage!.mortgageAmount,
+      mortgage!.interestRate,
+    );
+  }
 
   const totalTerm = value * (mortgage!.mortgageTerm * 12);
 

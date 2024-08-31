@@ -7,6 +7,8 @@ export interface IMortgage {
   mortgageAmount: number;
   mortgageTerm: number;
   interestRate: number;
+  repaymentCheckbox?: boolean;
+  interestCheckbox?: boolean;
 }
 
 interface IAppContext {
@@ -15,6 +17,8 @@ interface IAppContext {
     amount: number,
     term: number,
     interestRate: number,
+    repaymentCheckbox?: boolean,
+    interestCheckbox?: boolean,
   ) => void;
   updateMortgageParams: (
     amount?: number,
@@ -41,11 +45,18 @@ export const AppContextProvider: React.FC<{ children: ReactNode }> = ({
     amount: number,
     term: number,
     interestRate: number,
+    repaymentCheckbox?: boolean,
+    interestCheckbox?: boolean,
   ) => {
+    console.log(repaymentCheckbox);
+    console.log(interestCheckbox);
+
     SetAppState({
       mortgageAmount: amount,
       mortgageTerm: term,
       interestRate,
+      repaymentCheckbox,
+      interestCheckbox,
     });
   };
 

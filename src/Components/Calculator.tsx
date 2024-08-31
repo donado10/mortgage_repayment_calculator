@@ -48,6 +48,8 @@ const Form = () => {
   const mortgageAmountRef = useRef<HTMLInputElement>();
   const mortgageTermRef = useRef<HTMLInputElement>();
   const interestRateRef = useRef<HTMLInputElement>();
+  const repaymentCheckboxRef = useRef<HTMLInputElement>();
+  const interestCheckboxRef = useRef<HTMLInputElement>();
   const mortgageCtx = useAppContext();
 
   useEffect(() => {
@@ -55,6 +57,8 @@ const Form = () => {
       mortgageAmountRef.current!.value = "";
       mortgageTermRef.current!.value = "";
       interestRateRef.current!.value = "";
+      repaymentCheckboxRef.current!.checked = false;
+      interestCheckboxRef.current!.checked = false;
     }
   }, [mortgageCtx?.mortgageData]);
 
@@ -64,12 +68,16 @@ const Form = () => {
     const mortgageAmount = mortgageAmountRef.current?.value;
     const mortgageTerm = mortgageTermRef.current?.value;
     const interestRate = interestRateRef.current?.value;
+    const repaymentCheckBox = repaymentCheckboxRef.current?.checked;
+    const interestCheckbox = interestCheckboxRef.current?.checked;
 
     if (mortgageAmount && mortgageTerm && interestRate) {
       mortgageCtx?.addMortgageParams(
         +mortgageAmount,
         +mortgageTerm,
         +interestRate,
+        repaymentCheckBox,
+        interestCheckbox,
       );
     }
   };
@@ -122,11 +130,27 @@ const Form = () => {
         <InputLabel label="Mortgage Type" />
         <div className="flex flex-col gap-2">
           <InputFormCheckboxLayout>
-            <input type="checkbox" />
+            <input
+              type="checkbox"
+              ref={repaymentCheckboxRef as React.LegacyRef<HTMLInputElement>}
+              onChange={(e) => {
+                if (interestCheckboxRef.current?.checked) {
+                  interestCheckboxRef.current!.checked = false;
+                }
+              }}
+            />
             <InputCheckboxLabel label="Repayments" />
           </InputFormCheckboxLayout>
           <InputFormCheckboxLayout>
-            <input type="checkbox" />
+            <input
+              type="checkbox"
+              ref={interestCheckboxRef as React.LegacyRef<HTMLInputElement>}
+              onChange={(e) => {
+                if (repaymentCheckboxRef.current?.checked) {
+                  repaymentCheckboxRef.current!.checked = false;
+                }
+              }}
+            />
             <InputCheckboxLabel label="Interest Only" />
           </InputFormCheckboxLayout>
         </div>
@@ -158,7 +182,6 @@ const Calculator = () => {
           <button
             className="my-2 self-start text-slate-700 underline"
             onClick={() => {
-              console.log("heyyyyyy");
               mortgageCtx?.resetMortgageParams();
             }}
           >
