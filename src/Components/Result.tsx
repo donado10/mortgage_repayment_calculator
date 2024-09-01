@@ -1,11 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Illustation from "../assets/illustration-empty.svg";
-import {
-  calculateInterestOnlyPayment,
-  calculateMonthlyMortgage,
-} from "../Utils/Functions";
-import { useAppContext } from "../App";
-import { IMortgage } from "../App";
+import { IAppContext, useAppContext } from "../App";
 
 const BeforeCalcul = () => {
   return (
@@ -23,27 +18,11 @@ const BeforeCalcul = () => {
 };
 
 const AfterCalcul: React.FC<{
-  mortgage: IMortgage;
-}> = ({ mortgage }) => {
-  let value = 0;
-  if (mortgage.repaymentCheckbox) {
-    console.log(mortgage.repaymentCheckbox);
-    console.log(mortgage.interestCheckbox);
-
-    value = calculateMonthlyMortgage(
-      mortgage!.mortgageAmount,
-      mortgage!.interestRate,
-      mortgage!.mortgageTerm,
-    );
-  }
-  if (mortgage.interestCheckbox) {
-    value = calculateInterestOnlyPayment(
-      mortgage!.mortgageAmount,
-      mortgage!.interestRate,
-    );
-  }
-
-  const totalTerm = value * (mortgage!.mortgageTerm * 12);
+  value: number;
+}> = ({ value }) => {
+  const mortgageCtx = useAppContext();
+  const { mortgageTerm: years } = { ...mortgageCtx?.mortgageData };
+  const totalTerm = value * (years! * 12);
 
   return (
     <>
@@ -75,19 +54,32 @@ const AfterCalcul: React.FC<{
   );
 };
 
-const Result = () => {
-  const mortgageCtx = useAppContext();
-
-  const mortgageValues = mortgageCtx?.mortgageData
-    ? Object.values(mortgageCtx?.mortgageData)
-    : null;
+const Calcul: React.FC<{ result: number }> = ({ result }) => {
+  if (!result) {
+    return (
+      <>
+        <BeforeCalcul />
+      </>
+    );
+  }
 
   return (
+    <>
+      <AfterCalcul value={result} />
+    </>
+  );
+};
+
+const Result = () => {
+  const mortgageCtx = useAppContext();
+  const { mortgageResult } = {
+    ...mortgageCtx?.mortgageData,
+  };
+
+  console.log(mortgageResult);
+  return (
     <div className="flex w-full flex-col items-center justify-center gap-5 bg-slate-900 p-12 text-white sm:rounded-b-2xl md:w-1/2 md:rounded-b-none md:rounded-r-2xl md:rounded-bl-[100px]">
-      {(!mortgageValues || mortgageValues?.length < 2) && <BeforeCalcul />}
-      {mortgageValues && mortgageValues.length > 2 && (
-        <AfterCalcul mortgage={mortgageCtx?.mortgageData!} />
-      )}
+      <Calcul result={mortgageResult!} />
     </div>
   );
 };

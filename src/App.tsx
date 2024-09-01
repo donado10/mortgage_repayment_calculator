@@ -9,9 +9,10 @@ export interface IMortgage {
   interestRate: number;
   repaymentCheckbox?: boolean;
   interestCheckbox?: boolean;
+  mortgageResult?: number;
 }
 
-interface IAppContext {
+export interface IAppContext {
   mortgageData: IMortgage | null;
   addMortgageParams: (
     amount: number,
@@ -20,11 +21,14 @@ interface IAppContext {
     repaymentCheckbox?: boolean,
     interestCheckbox?: boolean,
   ) => void;
-  updateMortgageParams: (
-    amount?: number,
-    term?: number,
-    interestRate?: number,
-  ) => void;
+  updateMortgageParams: (mortgage?: {
+    amount?: number;
+    term?: number;
+    interestRate?: number;
+    repaymentCheckbox?: boolean;
+    interestCheckbox?: boolean;
+    mortgageResult?: number;
+  }) => void;
 
   resetMortgageParams: () => void;
 }
@@ -48,9 +52,6 @@ export const AppContextProvider: React.FC<{ children: ReactNode }> = ({
     repaymentCheckbox?: boolean,
     interestCheckbox?: boolean,
   ) => {
-    console.log(repaymentCheckbox);
-    console.log(interestCheckbox);
-
     SetAppState({
       mortgageAmount: amount,
       mortgageTerm: term,
@@ -60,28 +61,59 @@ export const AppContextProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  const updateMortgageParams = (
-    amount?: number,
-    term?: number,
-    interestRate?: number,
-  ) => {
-    if (amount) {
+  const updateMortgageParams = (mortgage?: {
+    amount?: number;
+    term?: number;
+    interestRate?: number;
+    repaymentCheckbox?: boolean;
+    interestCheckbox?: boolean;
+    mortgageResult?: number;
+  }) => {
+    if (mortgage?.amount) {
       SetAppState((prev) => {
-        return { ...(prev as IMortgage), amount };
+        return { ...(prev as IMortgage), mortgageAmount: mortgage?.amount! };
       });
       return;
     }
-    if (term) {
+    if (mortgage?.term) {
       SetAppState((prev) => {
-        return { ...(prev as IMortgage), term };
+        return { ...(prev as IMortgage), mortgageTerm: mortgage?.term! };
       });
       return;
     }
-    if (interestRate) {
+    if (mortgage?.interestRate) {
       SetAppState((prev) => {
-        return { ...(prev as IMortgage), interestRate };
+        return {
+          ...(prev as IMortgage),
+          interestRate: mortgage?.interestRate!,
+        };
       });
       return;
+    }
+    if (mortgage?.repaymentCheckbox || !mortgage?.repaymentCheckbox) {
+      SetAppState((prev) => {
+        return {
+          ...(prev as IMortgage),
+          repaymentCheckbox: mortgage?.repaymentCheckbox!,
+        };
+      });
+    }
+    if (mortgage?.interestCheckbox || !mortgage?.interestCheckbox) {
+      SetAppState((prev) => {
+        return {
+          ...(prev as IMortgage),
+          interestCheckbox: mortgage?.interestCheckbox!,
+        };
+      });
+    }
+
+    if (mortgage?.mortgageResult) {
+      SetAppState((prev) => {
+        return {
+          ...(prev as IMortgage),
+          mortgageResult: mortgage?.mortgageResult!,
+        };
+      });
     }
   };
 
@@ -105,12 +137,12 @@ export const AppContextProvider: React.FC<{ children: ReactNode }> = ({
 
 function App() {
   return (
-    <AppContextProvider>
-      <div className="w-full sm:p-10 md:flex md:w-3/5 md:flex-row md:rounded-r-2xl md:bg-white md:p-0">
+    <div className="w-full sm:p-10 md:flex md:w-3/5 md:flex-row md:rounded-r-2xl md:bg-white md:p-0">
+      <AppContextProvider>
         <Calculator />
         <Result />
-      </div>
-    </AppContextProvider>
+      </AppContextProvider>
+    </div>
   );
 }
 

@@ -1,6 +1,10 @@
 import React, { FormEvent, ReactNode, useEffect, useRef } from "react";
 import CalculatorIcon from "../assets/icon-calculator.svg";
 import { useAppContext } from "../App";
+import {
+  calculateInterestOnlyPayment,
+  calculateMonthlyMortgage,
+} from "../Utils/Functions";
 
 const InputFormLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
   return (
@@ -68,17 +72,42 @@ const Form = () => {
     const mortgageAmount = mortgageAmountRef.current?.value;
     const mortgageTerm = mortgageTermRef.current?.value;
     const interestRate = interestRateRef.current?.value;
-    const repaymentCheckBox = repaymentCheckboxRef.current?.checked;
+    const repaymentCheckbox = repaymentCheckboxRef.current?.checked;
     const interestCheckbox = interestCheckboxRef.current?.checked;
 
-    if (mortgageAmount && mortgageTerm && interestRate) {
+    if (
+      mortgageAmount &&
+      mortgageTerm &&
+      interestRate &&
+      (repaymentCheckbox || interestCheckbox)
+    ) {
       mortgageCtx?.addMortgageParams(
         +mortgageAmount,
         +mortgageTerm,
         +interestRate,
-        repaymentCheckBox,
+        repaymentCheckbox,
         interestCheckbox,
       );
+
+      if (repaymentCheckbox) {
+        const monthlyValue = calculateMonthlyMortgage(
+          +mortgageAmount!,
+          +interestRate!,
+          +mortgageTerm!,
+        );
+        mortgageCtx?.updateMortgageParams({ mortgageResult: monthlyValue });
+        return;
+      }
+      if (interestCheckbox) {
+        const interestOnlyValue = calculateInterestOnlyPayment(
+          +mortgageAmount!,
+          +interestRate!,
+        );
+        mortgageCtx?.updateMortgageParams({
+          mortgageResult: interestOnlyValue,
+        });
+        return;
+      }
     }
   };
 
@@ -97,6 +126,11 @@ const Form = () => {
             type="number"
             className="flex-grow outline-none"
             ref={mortgageAmountRef as React.LegacyRef<HTMLInputElement>}
+            onChange={(e) => {
+              mortgageCtx?.updateMortgageParams({
+                amount: +e.currentTarget.value,
+              });
+            }}
           />
         </InputFormLayout>
       </div>
@@ -108,6 +142,11 @@ const Form = () => {
               type="number"
               className="flex-grow p-1 outline-none md:w-[80%] md:flex-grow-0"
               ref={mortgageTermRef as React.LegacyRef<HTMLInputElement>}
+              onChange={(e) => {
+                mortgageCtx?.updateMortgageParams({
+                  term: +e.currentTarget.value,
+                });
+              }}
             />
 
             <InputFormPrefix content={"years"} />
@@ -121,6 +160,11 @@ const Form = () => {
               className="flex-grow p-1 outline-none md:w-[80%] md:flex-grow-0"
               ref={interestRateRef as React.LegacyRef<HTMLInputElement>}
               step={0.01}
+              onChange={(e) => {
+                mortgageCtx?.updateMortgageParams({
+                  interestRate: +e.currentTarget.value,
+                });
+              }}
             />
             <InputFormPrefix content={"%"} />
           </InputFormLayout>
@@ -137,6 +181,10 @@ const Form = () => {
                 if (interestCheckboxRef.current?.checked) {
                   interestCheckboxRef.current!.checked = false;
                 }
+                mortgageCtx?.updateMortgageParams({
+                  repaymentCheckbox: e.currentTarget!.checked,
+                  interestCheckbox: false,
+                });
               }}
             />
             <InputCheckboxLabel label="Repayments" />
@@ -149,6 +197,10 @@ const Form = () => {
                 if (repaymentCheckboxRef.current?.checked) {
                   repaymentCheckboxRef.current!.checked = false;
                 }
+                mortgageCtx?.updateMortgageParams({
+                  repaymentCheckbox: false,
+                  interestCheckbox: e.currentTarget!.checked,
+                });
               }}
             />
             <InputCheckboxLabel label="Interest Only" />
