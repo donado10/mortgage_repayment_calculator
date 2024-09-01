@@ -175,7 +175,7 @@ const Form = () => {
         <div className="flex flex-col gap-2">
           <InputFormCheckboxLayout>
             <input
-              type="checkbox"
+              type="radio"
               ref={repaymentCheckboxRef as React.LegacyRef<HTMLInputElement>}
               onChange={(e) => {
                 if (interestCheckboxRef.current?.checked) {
@@ -191,7 +191,7 @@ const Form = () => {
           </InputFormCheckboxLayout>
           <InputFormCheckboxLayout>
             <input
-              type="checkbox"
+              type="radio"
               ref={interestCheckboxRef as React.LegacyRef<HTMLInputElement>}
               onChange={(e) => {
                 if (repaymentCheckboxRef.current?.checked) {
