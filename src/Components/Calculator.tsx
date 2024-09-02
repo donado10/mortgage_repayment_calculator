@@ -1,4 +1,11 @@
-import React, { FormEvent, ReactNode, useEffect, useRef } from "react";
+import React, {
+  FormEvent,
+  ReactNode,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import CalculatorIcon from "../assets/icon-calculator.svg";
 import { useAppContext } from "../App";
 import {
@@ -6,9 +13,20 @@ import {
   calculateMonthlyMortgage,
 } from "../Utils/Functions";
 
-const InputFormLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
+import focusReducer, {
+  EFocusReducer,
+  EPayloadFocusReducer,
+  IFocusStateReducer,
+} from "./Reducer";
+
+const InputFormLayout: React.FC<{ children: ReactNode; isFocus?: boolean }> = ({
+  children,
+  isFocus,
+}) => {
   return (
-    <div className="flex h-10 w-full overflow-hidden rounded-l-lg rounded-r-lg border-[1px] border-slate-500">
+    <div
+      className={`flex h-10 w-full overflow-hidden rounded-l-lg rounded-r-lg border-[1px] ${isFocus ? "border-lime-custom" : "border-slate-500"}`}
+    >
       {children}
     </div>
   );
@@ -24,9 +42,14 @@ const InputFormCheckboxLayout: React.FC<{ children: ReactNode }> = ({
   );
 };
 
-const InputFormPrefix: React.FC<{ content: string }> = ({ content }) => {
+const InputFormPrefix: React.FC<{ content: string; isFocus?: boolean }> = ({
+  content,
+  isFocus,
+}) => {
   return (
-    <div className="flex min-w-[5%] items-center justify-center bg-slate-100 py-1">
+    <div
+      className={`flex min-w-[5%] items-center justify-center ${isFocus ? "bg-lime-custom" : "bg-slate-100"} py-1`}
+    >
       <span className="px-4 font-semibold text-slate-700">{content}</span>
     </div>
   );
@@ -55,6 +78,26 @@ const Form = () => {
   const repaymentCheckboxRef = useRef<HTMLInputElement>();
   const interestCheckboxRef = useRef<HTMLInputElement>();
   const mortgageCtx = useAppContext();
+
+  const initialFocusReducerState: IFocusStateReducer = {
+    amount: false,
+    interest: false,
+    term: false,
+    type: false,
+  };
+
+  const [focusReducerState, dispatchFocusReducerState] = useReducer(
+    focusReducer,
+    initialFocusReducerState,
+  );
+
+  const focusHandler = (cb: () => void) => {
+    cb();
+    return "bg-lime-custom";
+  };
+  const blurHandler = (cb: () => void) => {
+    cb();
+  };
 
   useEffect(() => {
     if (!mortgageCtx?.mortgageData) {
@@ -119,17 +162,33 @@ const Form = () => {
     >
       <div className="flex flex-col gap-2">
         <InputLabel label="Mortgage Amount" />
-        <InputFormLayout>
-          <InputFormPrefix content={"£"} />
+        <InputFormLayout isFocus={focusReducerState.amount}>
+          <InputFormPrefix content={"£"} isFocus={focusReducerState.amount} />
 
           <input
             type="number"
-            className="flex-grow outline-none"
             ref={mortgageAmountRef as React.LegacyRef<HTMLInputElement>}
             onChange={(e) => {
               mortgageCtx?.updateMortgageParams({
                 amount: +e.currentTarget.value,
               });
+            }}
+            className={`flex-grow outline-none`}
+            onFocus={() => {
+              focusHandler(
+                dispatchFocusReducerState.bind(null, {
+                  type: EFocusReducer.AMOUNT,
+                  payload: EPayloadFocusReducer.SET,
+                }),
+              );
+            }}
+            onBlur={() => {
+              blurHandler(
+                dispatchFocusReducerState.bind(null, {
+                  type: EFocusReducer.AMOUNT,
+                  payload: EPayloadFocusReducer.REMOVE,
+                }),
+              );
             }}
           />
         </InputFormLayout>
@@ -137,7 +196,7 @@ const Form = () => {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-5 md:w-full md:justify-between">
         <div className="flex flex-col gap-2 sm:flex-grow md:w-[45%] md:flex-grow-0">
           <InputLabel label="Mortgage Term" />
-          <InputFormLayout>
+          <InputFormLayout isFocus={focusReducerState.term}>
             <input
               type="number"
               className="flex-grow p-1 outline-none md:w-[80%] md:flex-grow-0"
@@ -147,14 +206,33 @@ const Form = () => {
                   term: +e.currentTarget.value,
                 });
               }}
+              onFocus={() => {
+                focusHandler(
+                  dispatchFocusReducerState.bind(null, {
+                    type: EFocusReducer.TERM,
+                    payload: EPayloadFocusReducer.SET,
+                  }),
+                );
+              }}
+              onBlur={() => {
+                blurHandler(
+                  dispatchFocusReducerState.bind(null, {
+                    type: EFocusReducer.TERM,
+                    payload: EPayloadFocusReducer.REMOVE,
+                  }),
+                );
+              }}
             />
 
-            <InputFormPrefix content={"years"} />
+            <InputFormPrefix
+              content={"years"}
+              isFocus={focusReducerState.term}
+            />
           </InputFormLayout>
         </div>
         <div className="flex flex-col gap-2 sm:flex-grow md:w-[45%] md:flex-grow-0">
           <InputLabel label="Interest Rate" />
-          <InputFormLayout>
+          <InputFormLayout isFocus={focusReducerState.interest}>
             <input
               type="number"
               className="flex-grow p-1 outline-none md:w-[80%] md:flex-grow-0"
@@ -165,8 +243,27 @@ const Form = () => {
                   interestRate: +e.currentTarget.value,
                 });
               }}
+              onFocus={() => {
+                focusHandler(
+                  dispatchFocusReducerState.bind(null, {
+                    type: EFocusReducer.INTEREST,
+                    payload: EPayloadFocusReducer.SET,
+                  }),
+                );
+              }}
+              onBlur={() => {
+                blurHandler(
+                  dispatchFocusReducerState.bind(null, {
+                    type: EFocusReducer.INTEREST,
+                    payload: EPayloadFocusReducer.REMOVE,
+                  }),
+                );
+              }}
             />
-            <InputFormPrefix content={"%"} />
+            <InputFormPrefix
+              content={"%"}
+              isFocus={focusReducerState.interest}
+            />
           </InputFormLayout>
         </div>
       </div>
