@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Illustation from "../assets/illustration-empty.svg";
-import { IAppContext, useAppContext } from "../App";
+import { useAppContext } from "../App";
 
 const BeforeCalcul = () => {
   return (
@@ -54,7 +54,7 @@ const AfterCalcul: React.FC<{
   );
 };
 
-const Calcul: React.FC<{ result: number }> = ({ result }) => {
+/* const Calcul: React.FC<{ result: number }> = ({ result }) => {
   if (!result) {
     return (
       <>
@@ -68,7 +68,7 @@ const Calcul: React.FC<{ result: number }> = ({ result }) => {
       <AfterCalcul value={result} />
     </>
   );
-};
+}; */
 
 const Result = () => {
   const mortgageCtx = useAppContext();

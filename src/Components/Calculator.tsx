@@ -160,6 +160,23 @@ const Form = () => {
         type: EFocusReducer.INTEREST_TYPE,
         payload: EPayloadFocusReducer.REMOVE,
       });
+
+      dispatchErrorReducerState({
+        type: EErrorReducer.AMOUNT,
+        payload: EPayloadErrorReducer.REMOVE,
+      });
+      dispatchErrorReducerState({
+        type: EErrorReducer.INTEREST,
+        payload: EPayloadErrorReducer.REMOVE,
+      });
+      dispatchErrorReducerState({
+        type: EErrorReducer.TERM,
+        payload: EPayloadErrorReducer.REMOVE,
+      });
+      dispatchErrorReducerState({
+        type: EErrorReducer.TYPE,
+        payload: EPayloadErrorReducer.REMOVE,
+      });
     }
   }, [mortgageCtx?.mortgageData]);
 
