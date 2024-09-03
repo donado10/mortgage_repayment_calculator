@@ -13,7 +13,7 @@ export default {
         "red-custom": "#D73328",
       },
       fontFamily: {
-        redHat: ["Red Hat Display", "sans-serif"],
+        jakarta: ["Plus Jakarta Sans", "sans-serif"],
       },
     },
     screens: {
