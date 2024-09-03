@@ -1,6 +1,6 @@
 import React from "react";
 import Illustation from "../assets/illustration-empty.svg";
-import { useAppContext } from "../App";
+import { useAppContext } from "../AppContext";
 
 const BeforeCalcul = () => {
   return (
@@ -54,40 +54,18 @@ const AfterCalcul: React.FC<{
   );
 };
 
-/* const Calcul: React.FC<{ result: number }> = ({ result }) => {
-  if (!result) {
-    return (
-      <>
-        <BeforeCalcul />
-      </>
-    );
-  }
-
-  return (
-    <>
-      <AfterCalcul value={result} />
-    </>
-  );
-}; */
-
 const Result = () => {
   const mortgageCtx = useAppContext();
   const { mortgageResult } = {
     ...mortgageCtx?.mortgageData,
   };
 
-  console.log(mortgageResult);
   return (
     <div className="flex w-full flex-col items-center justify-center gap-5 bg-slate-900 p-12 text-white sm:rounded-b-2xl md:w-1/2 md:rounded-b-none md:rounded-r-2xl md:rounded-bl-[100px]">
       {!mortgageResult && <BeforeCalcul />}
       {mortgageResult && <AfterCalcul value={mortgageResult} />}
     </div>
   );
-  /* return (
-    <div className="flex w-full flex-col items-center justify-center gap-5 bg-slate-900 p-12 text-white sm:rounded-b-2xl md:w-1/2 md:rounded-b-none md:rounded-r-2xl md:rounded-bl-[100px]">
-      <Calcul result={mortgageResult!} />
-    </div>
-  ); */
 };
 
 export default Result;
