@@ -28,14 +28,14 @@ const InputFormLayout: React.FC<{
   isFocus?: boolean;
   isError?: boolean;
 }> = ({ children, isFocus, isError }) => {
-  let classValue = `flex h-10 w-full overflow-hidden rounded-l-lg rounded-r-lg border-[1px] border-slate-500`;
+  let classValue = `flex h-10 w-full overflow-hidden rounded-l-lg rounded-r-lg hover:cursor-pointer hover:border-2 border-[1px] border-slate-500`;
 
   if (isFocus) {
-    classValue = `flex h-10 w-full overflow-hidden rounded-l-lg rounded-r-lg border-[1px] border-lime-custom `;
+    classValue = `flex h-10 w-full overflow-hidden rounded-l-lg rounded-r-lg hover:cursor-pointer hover:border-2 border-[1px] border-lime-custom `;
   }
 
   if (!isFocus && isError) {
-    classValue = `flex h-10 w-full overflow-hidden rounded-l-lg rounded-r-lg border-[1px] border-red-custom `;
+    classValue = `flex h-10 w-full overflow-hidden rounded-l-lg rounded-r-lg hover:cursor-pointer hover:border-2 border-[1px] border-red-custom `;
   }
 
   return <div className={classValue}>{children}</div>;
@@ -47,7 +47,7 @@ const InputFormCheckboxLayout: React.FC<{
 }> = ({ children, isFocus }) => {
   return (
     <div
-      className={`flex h-10 w-full items-center gap-5 overflow-hidden rounded-l-lg rounded-r-lg border-[1px] ${isFocus ? "border-lime-custom bg-[#D8DB2F]/15" : "border-slate-500"} p-2`}
+      className={`flex h-10 w-full items-center gap-5 overflow-hidden rounded-l-lg rounded-r-lg border-[1px] hover:cursor-pointer hover:border-lime-custom ${isFocus ? "border-lime-custom bg-[#D8DB2F]/15" : "border-slate-500"} p-2`}
     >
       {children}
     </div>
@@ -485,7 +485,7 @@ const Form = () => {
 
       <button
         onSubmit={submitHandler}
-        className="flex w-full items-center justify-center gap-4 rounded-l-full rounded-r-full bg-lime-custom p-3 font-semibold sm:w-[90%]"
+        className="flex w-full items-center justify-center gap-4 rounded-l-full rounded-r-full bg-lime-custom p-3 font-semibold hover:cursor-pointer hover:bg-lime-custom/50 sm:w-[90%]"
       >
         <span>
           <img src={CalculatorIcon} alt="" />
