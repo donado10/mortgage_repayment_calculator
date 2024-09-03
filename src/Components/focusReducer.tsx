@@ -2,7 +2,8 @@ export enum EFocusReducer {
   AMOUNT,
   TERM,
   INTEREST,
-  TYPE,
+  REPAYMENT_TYPE,
+  INTEREST_TYPE,
 }
 
 export enum EPayloadFocusReducer {
@@ -14,7 +15,8 @@ export interface IFocusStateReducer {
   amount: boolean;
   term: boolean;
   interest: boolean;
-  type: boolean;
+  repayment_type: boolean;
+  interest_type: boolean;
 }
 
 export interface IActionReducer {
@@ -42,10 +44,16 @@ const focusReducer = (state: IFocusStateReducer, action: IActionReducer) => {
         interest: (state.interest =
           action.payload === EPayloadFocusReducer.SET ? true : false),
       };
-    case EFocusReducer.TYPE:
+    case EFocusReducer.REPAYMENT_TYPE:
       return {
         ...state,
-        type: (state.type =
+        repayment_type: (state.repayment_type =
+          action.payload === EPayloadFocusReducer.SET ? true : false),
+      };
+    case EFocusReducer.INTEREST_TYPE:
+      return {
+        ...state,
+        interest_type: (state.interest_type =
           action.payload === EPayloadFocusReducer.SET ? true : false),
       };
 

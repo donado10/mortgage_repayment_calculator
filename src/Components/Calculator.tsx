@@ -4,7 +4,6 @@ import React, {
   useEffect,
   useReducer,
   useRef,
-  useState,
 } from "react";
 import CalculatorIcon from "../assets/icon-calculator.svg";
 import { useAppContext } from "../App";
@@ -17,40 +16,66 @@ import focusReducer, {
   EFocusReducer,
   EPayloadFocusReducer,
   IFocusStateReducer,
-} from "./Reducer";
+} from "./focusReducer";
+import errorReducer, {
+  EErrorReducer,
+  EPayloadErrorReducer,
+  IErrorStateReducer,
+} from "./errorReducer";
 
-const InputFormLayout: React.FC<{ children: ReactNode; isFocus?: boolean }> = ({
-  children,
-  isFocus,
-}) => {
+const InputFormLayout: React.FC<{
+  children: ReactNode;
+  isFocus?: boolean;
+  isError?: boolean;
+}> = ({ children, isFocus, isError }) => {
+  let classValue = `flex h-10 w-full overflow-hidden rounded-l-lg rounded-r-lg border-[1px] border-slate-500`;
+
+  if (isFocus) {
+    classValue = `flex h-10 w-full overflow-hidden rounded-l-lg rounded-r-lg border-[1px] border-lime-custom `;
+  }
+
+  if (!isFocus && isError) {
+    classValue = `flex h-10 w-full overflow-hidden rounded-l-lg rounded-r-lg border-[1px] border-red-custom `;
+  }
+
+  return <div className={classValue}>{children}</div>;
+};
+
+const InputFormCheckboxLayout: React.FC<{
+  children: ReactNode;
+  isFocus?: boolean;
+}> = ({ children, isFocus }) => {
   return (
     <div
-      className={`flex h-10 w-full overflow-hidden rounded-l-lg rounded-r-lg border-[1px] ${isFocus ? "border-lime-custom" : "border-slate-500"}`}
+      className={`flex h-10 w-full items-center gap-5 overflow-hidden rounded-l-lg rounded-r-lg border-[1px] ${isFocus ? "border-lime-custom bg-[#D8DB2F]/15" : "border-slate-500"} p-2`}
     >
       {children}
     </div>
   );
 };
 
-const InputFormCheckboxLayout: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
-  return (
-    <div className="flex h-10 w-full items-center gap-5 overflow-hidden rounded-l-lg rounded-r-lg border-[1px] border-slate-500 p-2">
-      {children}
-    </div>
-  );
-};
+const InputFormPrefix: React.FC<{
+  content: string;
+  isFocus?: boolean;
+  isError?: boolean;
+}> = ({ content, isFocus, isError }) => {
+  let classValue = `flex min-w-[5%] items-center justify-center py-1 bg-slate-100`;
 
-const InputFormPrefix: React.FC<{ content: string; isFocus?: boolean }> = ({
-  content,
-  isFocus,
-}) => {
+  if (isFocus) {
+    classValue = `flex min-w-[5%] items-center justify-center py-1 bg-lime-custom`;
+  }
+
+  if (!isFocus && isError) {
+    classValue = `flex min-w-[5%] items-center justify-center py-1 bg-red-custom`;
+  }
+
   return (
-    <div
-      className={`flex min-w-[5%] items-center justify-center ${isFocus ? "bg-lime-custom" : "bg-slate-100"} py-1`}
-    >
-      <span className="px-4 font-semibold text-slate-700">{content}</span>
+    <div className={classValue}>
+      <span
+        className={`px-4 font-bold ${isError ? "text-white" : "text-slate-700"} `}
+      >
+        {content}
+      </span>
     </div>
   );
 };
@@ -71,6 +96,14 @@ const InputCheckboxLabel: React.FC<{ label: string }> = ({ label }) => {
   );
 };
 
+const ErrorAlert = () => {
+  return (
+    <span className="font-semibold text-red-custom">
+      This field is required
+    </span>
+  );
+};
+
 const Form = () => {
   const mortgageAmountRef = useRef<HTMLInputElement>();
   const mortgageTermRef = useRef<HTMLInputElement>();
@@ -83,12 +116,25 @@ const Form = () => {
     amount: false,
     interest: false,
     term: false,
+    interest_type: false,
+    repayment_type: false,
+  };
+
+  const initialErrorReducerState: IErrorStateReducer = {
+    amount: false,
+    interest: false,
+    term: false,
     type: false,
   };
 
   const [focusReducerState, dispatchFocusReducerState] = useReducer(
     focusReducer,
     initialFocusReducerState,
+  );
+
+  const [errorReducerState, dispatchErrorReducerState] = useReducer(
+    errorReducer,
+    initialErrorReducerState,
   );
 
   const focusHandler = (cb: () => void) => {
@@ -106,11 +152,21 @@ const Form = () => {
       interestRateRef.current!.value = "";
       repaymentCheckboxRef.current!.checked = false;
       interestCheckboxRef.current!.checked = false;
+      dispatchFocusReducerState({
+        type: EFocusReducer.REPAYMENT_TYPE,
+        payload: EPayloadFocusReducer.REMOVE,
+      });
+      dispatchFocusReducerState({
+        type: EFocusReducer.INTEREST_TYPE,
+        payload: EPayloadFocusReducer.REMOVE,
+      });
     }
   }, [mortgageCtx?.mortgageData]);
 
   const submitHandler = (event: FormEvent) => {
     event.preventDefault();
+
+    let errors = 0;
 
     const mortgageAmount = mortgageAmountRef.current?.value;
     const mortgageTerm = mortgageTermRef.current?.value;
@@ -118,16 +174,60 @@ const Form = () => {
     const repaymentCheckbox = repaymentCheckboxRef.current?.checked;
     const interestCheckbox = interestCheckboxRef.current?.checked;
 
-    if (
-      mortgageAmount &&
-      mortgageTerm &&
-      interestRate &&
-      (repaymentCheckbox || interestCheckbox)
-    ) {
+    if (!mortgageAmount) {
+      dispatchErrorReducerState({
+        type: EErrorReducer.AMOUNT,
+        payload: EPayloadErrorReducer.SET,
+      });
+      errors++;
+    } else {
+      dispatchErrorReducerState({
+        type: EErrorReducer.AMOUNT,
+        payload: EPayloadErrorReducer.REMOVE,
+      });
+    }
+    if (!mortgageTerm) {
+      dispatchErrorReducerState({
+        type: EErrorReducer.TERM,
+        payload: EPayloadErrorReducer.SET,
+      });
+      errors++;
+    } else {
+      dispatchErrorReducerState({
+        type: EErrorReducer.TERM,
+        payload: EPayloadErrorReducer.REMOVE,
+      });
+    }
+    if (!interestRate) {
+      dispatchErrorReducerState({
+        type: EErrorReducer.INTEREST,
+        payload: EPayloadErrorReducer.SET,
+      });
+      errors++;
+    } else {
+      dispatchErrorReducerState({
+        type: EErrorReducer.INTEREST,
+        payload: EPayloadErrorReducer.REMOVE,
+      });
+    }
+    if (!interestCheckbox && !repaymentCheckbox) {
+      dispatchErrorReducerState({
+        type: EErrorReducer.TYPE,
+        payload: EPayloadErrorReducer.SET,
+      });
+      errors++;
+    } else {
+      dispatchErrorReducerState({
+        type: EErrorReducer.TYPE,
+        payload: EPayloadErrorReducer.REMOVE,
+      });
+    }
+
+    if (errors === 0) {
       mortgageCtx?.addMortgageParams(
-        +mortgageAmount,
-        +mortgageTerm,
-        +interestRate,
+        +mortgageAmount!,
+        +mortgageTerm!,
+        +interestRate!,
         repaymentCheckbox,
         interestCheckbox,
       );
@@ -162,18 +262,31 @@ const Form = () => {
     >
       <div className="flex flex-col gap-2">
         <InputLabel label="Mortgage Amount" />
-        <InputFormLayout isFocus={focusReducerState.amount}>
-          <InputFormPrefix content={"£"} isFocus={focusReducerState.amount} />
-
+        <InputFormLayout
+          isFocus={focusReducerState.amount}
+          isError={errorReducerState.amount}
+        >
+          <InputFormPrefix
+            content={"£"}
+            isFocus={focusReducerState.amount}
+            isError={errorReducerState.amount}
+          />
           <input
             type="number"
             ref={mortgageAmountRef as React.LegacyRef<HTMLInputElement>}
             onChange={(e) => {
+              const amount = +e.currentTarget.value;
               mortgageCtx?.updateMortgageParams({
-                amount: +e.currentTarget.value,
+                amount: amount,
               });
+              if (amount > 0) {
+                dispatchErrorReducerState({
+                  type: EErrorReducer.AMOUNT,
+                  payload: EPayloadErrorReducer.REMOVE,
+                });
+              }
             }}
-            className={`flex-grow outline-none`}
+            className={`flex-grow pl-2 font-semibold outline-none`}
             onFocus={() => {
               focusHandler(
                 dispatchFocusReducerState.bind(null, {
@@ -192,19 +305,31 @@ const Form = () => {
             }}
           />
         </InputFormLayout>
+        {errorReducerState.amount && <ErrorAlert />}
       </div>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-5 md:w-full md:justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-5 md:w-full md:justify-between">
         <div className="flex flex-col gap-2 sm:flex-grow md:w-[45%] md:flex-grow-0">
           <InputLabel label="Mortgage Term" />
-          <InputFormLayout isFocus={focusReducerState.term}>
+          <InputFormLayout
+            isFocus={focusReducerState.term}
+            isError={errorReducerState.term}
+          >
             <input
               type="number"
-              className="flex-grow p-1 outline-none md:w-[80%] md:flex-grow-0"
+              className="flex-grow p-1 pl-2 font-semibold outline-none md:w-[80%] md:flex-grow-0"
               ref={mortgageTermRef as React.LegacyRef<HTMLInputElement>}
               onChange={(e) => {
+                const term = +e.currentTarget.value;
                 mortgageCtx?.updateMortgageParams({
-                  term: +e.currentTarget.value,
+                  term: term,
                 });
+
+                if (term > 0) {
+                  dispatchErrorReducerState({
+                    type: EErrorReducer.TERM,
+                    payload: EPayloadErrorReducer.REMOVE,
+                  });
+                }
               }}
               onFocus={() => {
                 focusHandler(
@@ -227,21 +352,34 @@ const Form = () => {
             <InputFormPrefix
               content={"years"}
               isFocus={focusReducerState.term}
+              isError={errorReducerState.term}
             />
           </InputFormLayout>
+          {errorReducerState.term && <ErrorAlert />}
         </div>
         <div className="flex flex-col gap-2 sm:flex-grow md:w-[45%] md:flex-grow-0">
           <InputLabel label="Interest Rate" />
-          <InputFormLayout isFocus={focusReducerState.interest}>
+          <InputFormLayout
+            isFocus={focusReducerState.interest}
+            isError={errorReducerState.interest}
+          >
             <input
               type="number"
-              className="flex-grow p-1 outline-none md:w-[80%] md:flex-grow-0"
+              className="flex-grow p-1 pl-2 font-semibold outline-none md:w-[80%] md:flex-grow-0"
               ref={interestRateRef as React.LegacyRef<HTMLInputElement>}
               step={0.01}
               onChange={(e) => {
+                const interestRate = +e.currentTarget.value;
                 mortgageCtx?.updateMortgageParams({
-                  interestRate: +e.currentTarget.value,
+                  interestRate: interestRate,
                 });
+
+                if (interestRate > 0) {
+                  dispatchErrorReducerState({
+                    type: EErrorReducer.INTEREST,
+                    payload: EPayloadErrorReducer.REMOVE,
+                  });
+                }
               }}
               onFocus={() => {
                 focusHandler(
@@ -263,46 +401,86 @@ const Form = () => {
             <InputFormPrefix
               content={"%"}
               isFocus={focusReducerState.interest}
+              isError={errorReducerState.interest}
             />
           </InputFormLayout>
+          {errorReducerState.interest && <ErrorAlert />}
         </div>
       </div>
       <div className="flex flex-col gap-2">
         <InputLabel label="Mortgage Type" />
         <div className="flex flex-col gap-2">
-          <InputFormCheckboxLayout>
-            <input
-              type="radio"
-              ref={repaymentCheckboxRef as React.LegacyRef<HTMLInputElement>}
-              onChange={(e) => {
-                if (interestCheckboxRef.current?.checked) {
-                  interestCheckboxRef.current!.checked = false;
-                }
-                mortgageCtx?.updateMortgageParams({
-                  repaymentCheckbox: e.currentTarget!.checked,
-                  interestCheckbox: false,
-                });
-              }}
-            />
+          <InputFormCheckboxLayout isFocus={focusReducerState.repayment_type}>
+            <div className="grid place-items-center">
+              <input
+                type="radio"
+                className={`col-start-1 row-start-1 h-4 w-4 appearance-none rounded-full border-[1px] ${focusReducerState.repayment_type ? "border-lime-custom" : "border-slate-900"}`}
+                ref={repaymentCheckboxRef as React.LegacyRef<HTMLInputElement>}
+                onChange={(e) => {
+                  if (interestCheckboxRef.current?.checked) {
+                    interestCheckboxRef.current!.checked = false;
+                  }
+                  mortgageCtx?.updateMortgageParams({
+                    repaymentCheckbox: e.currentTarget!.checked,
+                    interestCheckbox: false,
+                  });
+                  dispatchFocusReducerState({
+                    type: EFocusReducer.REPAYMENT_TYPE,
+                    payload: EPayloadFocusReducer.SET,
+                  });
+                  dispatchFocusReducerState({
+                    type: EFocusReducer.INTEREST_TYPE,
+                    payload: EPayloadFocusReducer.REMOVE,
+                  });
+                  dispatchErrorReducerState({
+                    type: EErrorReducer.TYPE,
+                    payload: EPayloadErrorReducer.REMOVE,
+                  });
+                }}
+              />
+              {focusReducerState.repayment_type && (
+                <div className="col-start-1 row-start-1 h-2 w-2 rounded-full bg-lime-custom" />
+              )}
+            </div>
             <InputCheckboxLabel label="Repayments" />
           </InputFormCheckboxLayout>
-          <InputFormCheckboxLayout>
-            <input
-              type="radio"
-              ref={interestCheckboxRef as React.LegacyRef<HTMLInputElement>}
-              onChange={(e) => {
-                if (repaymentCheckboxRef.current?.checked) {
-                  repaymentCheckboxRef.current!.checked = false;
-                }
-                mortgageCtx?.updateMortgageParams({
-                  repaymentCheckbox: false,
-                  interestCheckbox: e.currentTarget!.checked,
-                });
-              }}
-            />
+          <InputFormCheckboxLayout isFocus={focusReducerState.interest_type}>
+            <div className="grid place-items-center">
+              <input
+                type="radio"
+                className={`col-start-1 row-start-1 h-4 w-4 appearance-none rounded-full border-[1px] ${focusReducerState.interest_type ? "border-lime-custom" : "border-slate-900"}`}
+                ref={interestCheckboxRef as React.LegacyRef<HTMLInputElement>}
+                onChange={(e) => {
+                  if (repaymentCheckboxRef.current?.checked) {
+                    repaymentCheckboxRef.current!.checked = false;
+                  }
+                  mortgageCtx?.updateMortgageParams({
+                    repaymentCheckbox: false,
+                    interestCheckbox: e.currentTarget!.checked,
+                  });
+                  dispatchFocusReducerState({
+                    type: EFocusReducer.INTEREST_TYPE,
+                    payload: EPayloadFocusReducer.SET,
+                  });
+                  dispatchFocusReducerState({
+                    type: EFocusReducer.REPAYMENT_TYPE,
+                    payload: EPayloadFocusReducer.REMOVE,
+                  });
+
+                  dispatchErrorReducerState({
+                    type: EErrorReducer.TYPE,
+                    payload: EPayloadErrorReducer.REMOVE,
+                  });
+                }}
+              />
+              {focusReducerState.interest_type && (
+                <div className="col-start-1 row-start-1 h-2 w-2 rounded-full bg-lime-custom" />
+              )}
+            </div>
             <InputCheckboxLabel label="Interest Only" />
           </InputFormCheckboxLayout>
         </div>
+        {errorReducerState.type && <ErrorAlert />}
       </div>
 
       <button
